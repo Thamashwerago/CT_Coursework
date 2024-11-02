@@ -11,15 +11,15 @@ def bisection_method(f, a, b, tol, max_iter):
     iters = 0
     
     if f(a) == 0:
-        return a, iters, 0
+        return a, 1, 0
     elif f(b) == 0:
-        return b, iters, 0
+        return b, 1, 0
     
     while iters < max_iter:
         
         c = (a + b) / 2.0
         
-        if f(c) == 0 or abs(b - a) < tol:
+        if f(c) == 0 or abs(b - a)/2.0 < tol:
             return c, iters, abs(b- a)
         elif f(a) * f(c) < 0:
             b = c
@@ -31,7 +31,7 @@ def bisection_method(f, a, b, tol, max_iter):
             
         iters += 1
 
-    return c, iters, abs(b - a)
+    return c, iters, abs(f(c))
 
 # Newton-Raphson Method
 def newton_raphson_method(f, f_prime, x0, tol, max_iter):
@@ -95,8 +95,7 @@ def calculate_derivative(x):
     e = e.replace('cos(x)','math.cos(x)').replace('sin(x)','math.sin(x)').replace('tan(x)','math.tan(x)').replace('e^x','math.exp(x)')
     return eval(e.replace('x', str(x)))
 
-def get_equation():
-    e = equationTextField.get()
+def get_equation(e):
     e = e.replace('e^x','exp(x)')
     e = e.replace('X','x').replace(" ","").replace("^","**")
     global equation
@@ -105,85 +104,90 @@ def get_equation():
 
 def get_guess(n):
     if n.find(",") == -1:
-        return int(n),0
+        return float(n),0
     else:
         a,b =  n.split(",")
-        return int(a),int(b)
+        return float(a),float(b)
+    
+def clearValues(variables):
+    for variable in variables:
+        variable.configure(text="")
+        
+def setValues(variables,values):
+    i=0
+    while i<len(variables):
+        variables[i].configure(text=values[i])
+        i += 1
+    
+def error_handling(equation,iteration,toleranc,guess,Bisection,Newton,Secant):
+    if equation == "":
+        setValues([message],["Enter Equation"])
+        return False
+    
+    if iteration == "":
+        setValues([message],["Enter Max Iteration value"])
+        return False
+    
+    if toleranc == "":
+        setValues([message],["Enter Toleranc value"])
+        return False
+    
+    if guess == "":
+        setValues([message],["Enter interval or initial guess values"])
+        return False
+    
+    if Bisection == 0 and Newton == 0 and Secant == 0:
+        setValues([message],["Select at least one of methods"])
+        return False
+        
+    clearValues([message])
+    return True
      
 def calculate():
-    e = get_equation()
+    
+    equation = equationTextField.get()
     iteration = iterationTextField.get()
     toleranc = toleranceTextField.get()
     guess = guessTextField.get()
-    if e != "" and (BisectionSwitch.get() == 1  or NewtonSwitch.get() == 1 or SecantSwitch.get() == 1) and iteration != "" and toleranc != "" and guess != "":
+    Bisection = BisectionSwitch.get()
+    Newton = NewtonSwitch.get()
+    Secant = SecantSwitch.get()
+    
+    if error_handling(equation,iteration,toleranc,guess,Bisection,Newton,Secant):
         
+        equation = get_equation(equation)
         iteration = float(iteration)
         toleranc = float(toleranc)
         a,b = get_guess(guess)
         
-        r1.configure(text="Root")
-        r2.configure(text="Iterations")
-        r3.configure(text="Final Error")
+        setValues([r1,r2,r3],["Root","Iterations","Final Error"])
         
         # Bisection method
-        if BisectionSwitch.get() == 1:
-            c1.configure(text="Bisection method")
-            root_bisection, iterations_bisection, error_bisection = bisection_method(evaluate_equation, a, b, toleranc, iteration)
-            br.configure(text=root_bisection)
-            bi.configure(text=iterations_bisection)
-            bf.configure(text=error_bisection)
+        if Bisection == 1:
+            setValues([c1],["Bisection method"])
+            bisectionResult = bisection_method(evaluate_equation, a, b, toleranc, iteration)
+            setValues([br,bi,bf],bisectionResult)
         else:
-            c1.configure(text="")
-            br.configure(text="")
-            bi.configure(text="")
-            bf.configure(text="")
+            clearValues([c1,br,bi,bf])
 
         # Newton-Raphson method
-        if NewtonSwitch.get() == 1:
-            c2.configure(text="Newton Raphson method")
-            root_newton, iterations_newton, error_newton = newton_raphson_method(evaluate_equation, calculate_derivative, a, toleranc, iteration)
-            nr.configure(text=root_newton)
-            ni.configure(text=iterations_newton)
-            nf.configure(text=error_newton)
+        if Newton == 1:
+            setValues([c2],["Newton Raphson method"])
+            newtonResult = newton_raphson_method(evaluate_equation, calculate_derivative, a, toleranc, iteration)
+            setValues([nr,ni,nf],newtonResult)
         else:
-            c2.configure(text="")
-            nr.configure(text="")
-            ni.configure(text="")
-            nf.configure(text="")
+            clearValues([c2,nr,ni,nf])
 
         # Secant method
-        if SecantSwitch.get() == 1:
-            c3.configure(text="Secant method")
-            root_secant, iterations_secant, error_secant = secant_method(evaluate_equation, a, b, toleranc, iteration)
-            sr.configure(text=root_secant)
-            si.configure(text=iterations_secant)
-            sf.configure(text=error_secant)
+        if Secant == 1:
+            setValues([c3],["Secant method"])
+            secantResult = secant_method(evaluate_equation, a, b, toleranc, iteration)
+            setValues([sr,si,sf],secantResult)
         else:
-            c3.configure(text="")
-            sr.configure(text="")
-            si.configure(text="")
-            sf.configure(text="")
+            clearValues([c3,sr,si,sf])
             
     else:
-        c1.configure(text="")
-        c2.configure(text="")
-        c3.configure(text="")
-        
-        r1.configure(text="")
-        r2.configure(text="")
-        r3.configure(text="")
-        
-        br.configure(text="")
-        bi.configure(text="")
-        bf.configure(text="")
-        
-        nr.configure(text="")
-        ni.configure(text="")
-        nf.configure(text="")
-        
-        sr.configure(text="")
-        si.configure(text="")
-        sf.configure(text="")
+        clearValues([c1,c2,c3,r1,r2,r3,br,bi,bf,nr,ni,nf,sr,si,sf])
 
 if __name__ == '__main__':
     

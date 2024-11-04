@@ -1,8 +1,6 @@
-import customtkinter
-import math
-import sympy as sp
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import customtkinter # Import customtkinter for creating GUI interface
+import math # Import math for mathematical operations
+import sympy as sp # Import sympy for symbolic mathematics, particularly for calculating derivatives
 
 equation=""
 
@@ -10,6 +8,7 @@ equation=""
 def bisection_method(f, a, b, tol, max_iter):
     iters = 0
     
+    # Check if initial endpoints are roots
     if f(a) == 0:
         return a, 1, 0
     elif f(b) == 0:
@@ -17,10 +16,11 @@ def bisection_method(f, a, b, tol, max_iter):
     
     while iters < max_iter:
         
-        c = (a + b) / 2.0
+        c = (a + b) / 2.0 # Calculate midpoint
         
+        # Check if midpoint is root or tolerance is met
         if f(c) == 0 or abs(b - a)/2.0 < tol:
-            return c, iters, abs(b- a)
+            return c, iters, abs(b - a)/2.0
         elif f(a) * f(c) < 0:
             b = c
         elif f(b) * f(c) < 0:
@@ -31,7 +31,7 @@ def bisection_method(f, a, b, tol, max_iter):
             
         iters += 1
 
-    return c, iters, abs(f(c))
+    return c, iters, abs(b - a)/2.0
 
 # Newton-Raphson Method
 def newton_raphson_method(f, f_prime, x0, tol, max_iter):
@@ -41,20 +41,25 @@ def newton_raphson_method(f, f_prime, x0, tol, max_iter):
         f_x = f(x)
         f_prime_x = f_prime(x)
         
+        # Check if function value is within tolerance
         if abs(f_x) < tol:
-            return x, iters, abs(f_x)
+            return x, iters, abs(x0 - x)
         
+        # Check if derivative is zero to avoid division by zero
         if f_prime_x == 0:
-            return x, iters, abs(f_x)
+            return x, iters, abs(x0 - x)
         
+        # Update value using Newton-Raphson formula
         x_new = x - f_x / f_prime_x
-        if abs(x_new - x) < tol:
-            return x_new, iters, abs(x_new - x)
         
+        if abs(x_new - x) < tol:
+            return x_new, iters, abs(x - x_new)
+        
+        x0 = x
         x = x_new
         iters += 1
 
-    return x, iters, abs(f(x))
+    return x, iters, abs(x0 - x)
 
 # Secant Method
 def secant_method(f, x0, x1, tol, max_iter):
@@ -63,38 +68,43 @@ def secant_method(f, x0, x1, tol, max_iter):
         f_x0 = f(x0)
         f_x1 = f(x1)
         
+        # Check if function value is within tolerance
         if abs(f_x1) < tol:
-            return x1, iters, abs(f_x1)
+            return x1, iters, abs(x0 - x1)
         
+         # Check if difference is zero to avoid division by zero
         if f_x1 - f_x0 == 0:
-            return x1, iters, abs(f_x1)
+            return x1, iters, abs(x0 - x1)
         
+        # Update value using Secant formula
         x_new = x1 - f_x1 * (x1 - x0) / (f_x1 - f_x0)
         
         if abs(x_new - x1) < tol:
-            return x_new, iters, abs(x_new - x1)
+            return x_new, iters, abs(x1 - x_new)
         
         x0 = x1
         x1 = x_new
         iters += 1
 
-    return x1, iters, abs(f(x1))
+    return x1, iters, abs(x0 - x1)
         
+# Function to evaluate the given equation at a specific value of x.
 def evaluate_equation(x):
     e = equation
     e = e.replace('cos(x)','math.cos(x)').replace('sin(x)','math.sin(x)').replace('tan(x)','math.tan(x)').replace('exp(x)','math.exp(x)')
-    return eval(e.replace('x', str(x)))
+    return eval(e)
 
+# Function to calculate the derivative of the given equation using sympy and evaluate it at a specific value of x.
 def calculate_derivative(x):
     e = equation
-    e = e.replace('exp(x)','e^x')
     X = sp.symbols('x')
     sympy_eq = sp.sympify(e)
     derivative = sp.diff(sympy_eq, X)
     e = str(derivative)
-    e = e.replace('cos(x)','math.cos(x)').replace('sin(x)','math.sin(x)').replace('tan(x)','math.tan(x)').replace('e^x','math.exp(x)')
-    return eval(e.replace('x', str(x)))
+    e = e.replace('cos(x)','math.cos(x)').replace('sin(x)','math.sin(x)').replace('tan(x)','math.tan(x)').replace('exp(x)','math.exp(x)')
+    return eval(e)
 
+# Function to process the user input equation to make it suitable for evaluation.
 def get_equation(e):
     e = e.replace('e^x','exp(x)')
     e = e.replace('X','x').replace(" ","").replace("^","**")
@@ -102,6 +112,7 @@ def get_equation(e):
     equation = e
     return e
 
+# Function to extract the initial guesses or interval endpoints from the user input.
 def get_guess(n):
     if n.find(",") == -1:
         return float(n),0
@@ -109,33 +120,42 @@ def get_guess(n):
         a,b =  n.split(",")
         return float(a),float(b)
     
+# Function to clear the text values for the specified GUI elements.
 def clearValues(variables):
     for variable in variables:
         variable.configure(text="")
-        
+       
+# Function to set the specified values for the given GUI elements. 
 def setValues(variables,values):
     i=0
     while i<len(variables):
         variables[i].configure(text=values[i])
         i += 1
     
+# Function to handle errors and validate the user input before performing calculations.
 def error_handling(equation,iteration,toleranc,guess,Bisection,Newton,Secant):
+    
+    # Prompt user to enter an equation if empty
     if equation == "":
         setValues([message],["Enter Equation"])
         return False
     
+    # Prompt user to enter maximum iteration value if empty
     if iteration == "":
         setValues([message],["Enter Max Iteration value"])
         return False
     
+    # Prompt user to enter tolerance value if empty
     if toleranc == "":
         setValues([message],["Enter Toleranc value"])
         return False
     
+     # Prompt user to enter initial guess values if empty
     if guess == "":
         setValues([message],["Enter interval or initial guess values"])
         return False
     
+    # Prompt user to select at least one method if none selected
     if Bisection == 0 and Newton == 0 and Secant == 0:
         setValues([message],["Select at least one of methods"])
         return False
@@ -143,6 +163,7 @@ def error_handling(equation,iteration,toleranc,guess,Bisection,Newton,Secant):
     clearValues([message])
     return True
      
+# Function to calculate the root of the equation based on the selected method(s) and display the results.
 def calculate():
     
     equation = equationTextField.get()
@@ -190,20 +211,24 @@ def calculate():
         clearValues([c1,c2,c3,r1,r2,r3,br,bi,bf,nr,ni,nf,sr,si,sf])
 
 if __name__ == '__main__':
-    
+    # Set appearance mode and color theme for the GUI
     customtkinter.set_appearance_mode("System")
     customtkinter.set_default_color_theme("dark-blue")
     
+    # Create main application window
     app = customtkinter.CTk()
     app.geometry("1280x720")
     app.title("CT")
     
+    # Create main frame
     frame = customtkinter.CTkFrame(app)
     frame.pack(pady=20,padx=60,fill="both",expand=True)
     
+    # Create top frame for user inputs
     topFrame = customtkinter.CTkFrame(frame)
     topFrame.pack(pady=20,padx=60)
     
+    # Create entry fields and button for user inputs
     equationTextField = customtkinter.CTkEntry(topFrame, placeholder_text="Enter equation",width=500,height=50,font=("Roboto",20))
     equationTextField.grid(row=0,column=0,pady=12,padx=10,columnspan = 2)
     
@@ -219,6 +244,7 @@ if __name__ == '__main__':
     guessTextField = customtkinter.CTkEntry(topFrame, placeholder_text="Enter  interval/Guess",width=200,height=50,font=("Roboto",20))
     guessTextField.grid(row=1,column=2,pady=12,padx=10,sticky="w")
     
+    # Create switches for selecting methods
     BisectionSwitch = customtkinter.CTkSwitch(topFrame,text="Bisection Method",onvalue=1, offvalue=0,font=("Roboto",16))
     BisectionSwitch.grid(row=2,column=0,pady=12,padx=10)
     
@@ -228,12 +254,14 @@ if __name__ == '__main__':
     SecantSwitch = customtkinter.CTkSwitch(topFrame,text="Secant Method",onvalue=1, offvalue=0,font=("Roboto",16))
     SecantSwitch.grid(row=2,column=2,pady=12,padx=10)
     
+    # Create bottom frame for displaying results
     bottomFrame = customtkinter.CTkFrame(frame)
     bottomFrame.pack(pady=20,padx=60,fill="both",expand=True)
     
     resultFrame = customtkinter.CTkFrame(bottomFrame,fg_color="transparent")
     resultFrame.pack()
     
+    # Create labels for displaying results
     #columns
     c1 = customtkinter.CTkLabel(resultFrame, text="", fg_color="transparent",font=("Roboto",24),justify="left")
     c1.grid(row=0,column=1,pady=12,padx=10)
@@ -254,7 +282,7 @@ if __name__ == '__main__':
     r3 = customtkinter.CTkLabel(resultFrame, text="", fg_color="transparent",font=("Roboto",24),justify="left")
     r3.grid(row=3,column=0,pady=12,padx=10)
     
-    #Bisection Method
+    #Bisection Method results
     br = customtkinter.CTkLabel(resultFrame, text="", fg_color="transparent",font=("Roboto",24),justify="left")
     br.grid(row=1,column=1,pady=12,padx=10)
     
@@ -264,7 +292,7 @@ if __name__ == '__main__':
     bf = customtkinter.CTkLabel(resultFrame, text="", fg_color="transparent",font=("Roboto",24),justify="left")
     bf.grid(row=3,column=1,pady=12,padx=10)
     
-    #Newton-Raphson Method
+    #Newton-Raphson Method  results
     nr = customtkinter.CTkLabel(resultFrame, text="", fg_color="transparent",font=("Roboto",24),justify="left")
     nr.grid(row=1,column=2,pady=12,padx=10)
     
@@ -274,7 +302,7 @@ if __name__ == '__main__':
     nf = customtkinter.CTkLabel(resultFrame, text="", fg_color="transparent",font=("Roboto",24),justify="left")
     nf.grid(row=3,column=2,pady=12,padx=10)
     
-    #Secant Method
+    #Secant Method  results
     sr = customtkinter.CTkLabel(resultFrame, text="", fg_color="transparent",font=("Roboto",24),justify="left")
     sr.grid(row=1,column=3,pady=12,padx=10)
     
@@ -284,12 +312,14 @@ if __name__ == '__main__':
     sf = customtkinter.CTkLabel(resultFrame, text="", fg_color="transparent",font=("Roboto",24),justify="left")
     sf.grid(row=3,column=3,pady=12,padx=10)
     
-    #message
+    # Message label for feedback or errors
     message = customtkinter.CTkLabel(resultFrame, text="", fg_color="transparent",text_color="#D0342C",font=("Roboto",24),justify="left")
     message.grid(row=4,column=0,pady=12,padx=10,columnspan = 4)
     
+    # Start the main loop of the application
     app.mainloop()
 
+    # Test equations
     # x^3 - x - 2
     # x^3 - 6*x^2 +11*x - 6
     # cos(x) - x

@@ -10,8 +10,10 @@ def bisection_method(f, a, b, tol, max_iter):
     
     # Check if initial endpoints are roots
     if f(a) == 0:
+        setValues([message],[f"{a} value is already root value"])
         return a, 1, 0
     elif f(b) == 0:
+        setValues([message],[f"{b} value is already root value"])
         return b, 1, 0
     
     while iters < max_iter:
@@ -47,6 +49,7 @@ def newton_raphson_method(f, f_prime, x0, tol, max_iter):
         
         # Check if derivative is zero to avoid division by zero
         if f_prime_x == 0:
+            setValues([message],["Zero derivative encountered"])
             return x, iters, abs(x0 - x)
         
         # Update value using Newton-Raphson formula
@@ -74,6 +77,7 @@ def secant_method(f, x0, x1, tol, max_iter):
         
          # Check if difference is zero to avoid division by zero
         if f_x1 - f_x0 == 0:
+            setValues([message],["Zero division encountered"])
             return x1, iters, abs(x0 - x1)
         
         # Update value using Secant formula
